@@ -1,0 +1,23 @@
+FROM mcr.microsoft.com/dotnet/aspnet:3.1 AS base
+WORKDIR /app
+EXPOSE 80
+
+FROM mcr.microsoft.com/dotnet/sdk:3.1 AS build
+WORKDIR /src
+COPY ["Code/dotnetmysl.Api/dotnetmysl.Api.csproj", "Code/dotnetmysl.Api/"]
+COPY ["Code/dotnetmysl.Business/dotnetmysl.Business.csproj", "Code/dotnetmysl.Business/"]
+COPY ["Code/dotnetmysl.Data/dotnetmysl.Data.csproj", "Code/dotnetmysl.Data/"]
+COPY ["Code/dotnetmysl.Entities/dotnetmysl.Entities.csproj", "Code/dotnetmysl.Entities/"]
+COPY ["Code/dotnetmysl.Test.Api/dotnetmysl.Test.Api.csproj", "Code/dotnetmysl.Test.Api/"]
+COPY ["Code/dotnetmysl.Test.Business/dotnetmysl.Test.Business.csproj", "Code/dotnetmysl.Test.Business/"]
+RUN dotnet restore "Code/dotnetmysl.Api/dotnetmysl.Api.csproj"
+COPY . .
+WORKDIR "/src/Code/dotnetmysl.Api"
+RUN dotnet build "dotnetmysl.Api.csproj" -c Release -o /app/build
+
+FROM build AS publish
+RUN dotnet publish "dotnetmysl.Api.csproj" -c Release -o /app/publish
+
+WORKDIR /src
+RUN dotnet test --results-directory /testresults --logger "trx;LogFileName=testresults.Api.trx" /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:CoverletOutput=/testresults/coverage/ /p:MergeWith=/testresults/coverage/coverage.json "Code/dotnetmysl.Test.Api/dotnetmysl.Test.Api.csproj"
+RUN dotnet test --results-directory /testresults --logger "trx;LogFileName=testresults.Api.trx" /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:CoverletOutput=/testresults/coverage/ /p:MergeWith=/testresults/coverage/coverage.json "Code/dotnetmysl.Test.Business/dotnetmysl.Test.Business.csproj"
