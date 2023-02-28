@@ -22,7 +22,7 @@ namespace dotnetmysl.Data.Repositories
 
         // Don't delete the below comment.
         // Dbset variables
-		public DbSet<Entity> Entity { get; set; }
+		public DbSet<Student> Student { get; set; }
                
 
     }
